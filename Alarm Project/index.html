@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timer Application</title>
+  <style>
+    /* General Styles */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #fff;
+    }
+
+    h2 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    /* Timer Input Section */
+    #timer-input {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 30px;
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      width: 350px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .input-group {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .input-group input {
+      width: 80px;
+      padding: 15px;
+      text-align: center;
+      border: none;
+      border-radius: 10px;
+      font-size: 18px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      outline: none;
+    }
+
+    .input-group input::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    #start-timer {
+      padding: 15px 30px;
+      background: linear-gradient(135deg, #ff6f61, #ff4d4d);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    #start-timer:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(255, 77, 77, 0.4);
+    }
+
+    /* Active Timers Section */
+    #active-timers {
+      margin-top: 30px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .timer-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 15px;
+      margin-bottom: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .timer-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    .timer-item.ended {
+      background: rgba(255, 77, 77, 0.2);
+      border-color: rgba(255, 77, 77, 0.4);
+    }
+
+    .timer-item span {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .timer-item button {
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    .timer-item button:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .time-up-message {
+      color: #ff4d4d;
+      font-weight: bold;
+      margin-left: 10px;
+      display: none; /* Initially hidden */
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .timer-item {
+      animation: fadeIn 0.5s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <!-- Timer Input Section -->
+  <section id="timer-input">
+    <h2>Set Timer</h2>
+    <div class="input-group">
+      <input type="number" id="hours" placeholder="HH" min="0" />
+      <input type="number" id="minutes" placeholder="MM" min="0" max="59" />
+      <input type="number" id="seconds" placeholder="SS" min="0" max="59" />
+    </div>
+    <button id="start-timer">Start New Timer</button>
+  </section>
+
+  <!-- Active Timers Section -->
+  <section id="active-timers">
+    <h2>Active Timers</h2>
+    <div id="timers-list"></div>
+  </section>
+
+  <script>
+    // Function to create a new timer
+    function createTimer(totalSeconds) {
+      const timersList = document.getElementById('timers-list');
+      const timerItem = document.createElement('div');
+      timerItem.classList.add('timer-item');
+
+      const timerDisplay = document.createElement('span');
+      const stopButton = document.createElement('button');
+      stopButton.innerText = 'Stop Timer';
+      stopButton.addEventListener('click', () => {
+        clearInterval(interval);
+        timerItem.remove();
+      });
+
+      const timeUpMessage = document.createElement('span');
+      timeUpMessage.classList.add('time-up-message');
+      timeUpMessage.innerText = "Time's Up!";
+
+      let remainingSeconds = totalSeconds;
+      timerDisplay.innerText = formatTime(remainingSeconds);
+
+      const interval = setInterval(() => {
+        remainingSeconds--;
+        timerDisplay.innerText = formatTime(remainingSeconds);
+
+        if (remainingSeconds <= 0) {
+          clearInterval(interval);
+          timerItem.classList.add('ended');
+          timeUpMessage.style.display = 'inline'; // Show "Time's Up!" message
+          playAlert();
+        }
+      }, 1000);
+
+      timerItem.appendChild(timerDisplay);
+      timerItem.appendChild(stopButton);
+      timerItem.appendChild(timeUpMessage);
+      timersList.appendChild(timerItem);
+    }
+
+    // Function to format time as HH:MM:SS
+    function formatTime(seconds) {
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = seconds % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    // Function to play an audio alert
+    function playAlert() {
+  const audio = new Audio('alarm1.mp3'); // Local file
+  audio.play().catch(error => {
+    console.error('Audio playback failed:', error);
+  });
+}
+
+
+
+    // Event listener for the Start New Timer button
+    document.getElementById('start-timer').addEventListener('click', () => {
+      const hours = parseInt(document.getElementById('hours').value) || 0;
+      const minutes = parseInt(document.getElementById('minutes').value) || 0;
+      const seconds = parseInt(document.getElementById('seconds').value) || 0;
+
+      const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+
+      if (totalSeconds > 0) {
+        createTimer(totalSeconds);
+      } else {
+        alert('Please enter a valid time.');
+      }
+    });
+  </script>
+</body>
+</html>
